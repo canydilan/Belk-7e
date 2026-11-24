@@ -1,0 +1,319 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Figure 13.9: How to calculate allele frequency</title>
+<style>
+  :root{
+    --teal:#2d6a6a; --ink:#1d1d1d; --muted:#6b6b6b; --line:#cfd6d6;
+    --A:#a64b4b; --a:#3a6db0; --bad:#a3231c; --good:#1e7a46; --bg:#fff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Helvetica,Arial,sans-serif}
+  .fig{max-width:780px;margin:0 auto;border-top:8px solid var(--teal);border-bottom:3px solid var(--teal);padding:0 0 12px;min-height:640px;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:14px;padding:14px 16px 8px;border-bottom:2px solid var(--line);margin:0 16px}
+  header .home{width:28px;height:28px;flex:none;fill:var(--teal)}
+  header h1{flex:1;margin:0;font-size:1.1rem;line-height:1.25}
+  .progress{display:flex;gap:4px}
+  .progress span{width:30px;height:9px;border-radius:5px;background:#dedede;transform:skewX(-20deg)}
+  .progress span.on{background:var(--teal)}
+  main{flex:1;padding:14px 32px 0}
+  main p{margin:0 0 12px}
+  .note{font-style:italic}
+  .stage{display:flex;align-items:flex-end;justify-content:center;gap:24px;margin:18px 0 6px;flex-wrap:wrap}
+  .people{display:flex;align-items:flex-end;justify-content:center;gap:2px}
+  .person{display:flex;flex-direction:column;align-items:center;width:62px}
+  .person svg{width:62px;height:auto;display:block;transition:opacity .25s,filter .25s}
+  .person.out svg{opacity:.22;filter:grayscale(1)}
+  .person label{display:flex;align-items:center;justify-content:center;width:100%;min-height:30px;margin-top:4px;cursor:pointer}
+  .person input{width:20px;height:20px;accent-color:var(--teal);cursor:pointer}
+  button.reveal{all:unset;cursor:pointer;display:block;border-radius:6px}
+  button.reveal:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
+  button.reveal:hover .people{filter:brightness(1.05)}
+  .pie-wrap{width:210px;text-align:center}
+  .pie-wrap svg{width:210px;height:210px;overflow:visible}
+  .pie-wrap .slice{transition:opacity .15s}
+  .pie-wrap .tip{font-size:.9rem;min-height:1.4em;margin-top:4px}
+  .readout{font-size:.95rem;margin-top:2px}
+  .reset{margin:8px auto 0;display:block;background:#fff;border:2px solid var(--teal);color:var(--teal);font-weight:700;padding:6px 18px;border-radius:20px;cursor:pointer}
+  .reset:hover{background:var(--teal);color:#fff}
+  .hidden{display:none}
+  h2.cyu{margin:6px 0 8px;font-size:1.3rem;border-left:3px solid var(--teal);border-bottom:3px solid var(--teal);border-right:3px solid var(--teal);border-top:0;padding:4px 6px}
+  .opts{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+  .opt{display:flex;align-items:center;gap:12px;border:2px solid #bbb;border-radius:4px;background:#fafafa;padding:12px;cursor:pointer}
+  .opt:hover{background:#f0f4f4}
+  .opt input{width:20px;height:20px;accent-color:#3b6fe0;flex:none}
+  .opt.wrong{border-color:var(--bad)}
+  .opt.right{border-color:var(--good)}
+  .opts.locked .opt{cursor:default}
+  .retry{display:block;margin:14px auto;background:#17375e;color:#fff;border:0;border-radius:24px;padding:10px 32px;font-weight:700;font-size:1rem;cursor:pointer}
+  .feedback{border-top:1px solid var(--line);padding-top:10px;margin-top:8px}
+  .feedback b.bad{color:var(--bad)} .feedback b.good{color:var(--good)}
+  footer{display:flex;justify-content:flex-end;align-items:center;gap:22px;padding:10px 40px 0;border-top:0}
+  footer button{all:unset;cursor:pointer;font-weight:700;display:flex;align-items:center;gap:4px;font-size:1.05rem}
+  footer button:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+  footer button[disabled]{color:#9a9a9a;cursor:default}
+  footer .pg{font-size:.95rem}
+  footer svg{width:14px;height:26px;stroke:currentColor;fill:none;stroke-width:2.5}
+  @media (max-width:600px){ main{padding:12px 16px 0} .person{width:34px} .person svg{width:34px} .people{gap:0} footer{padding:10px 16px 0}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="fig" id="fig">
+  <header>
+    <svg class="home" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 12h3v10h6v-6h4v6h6V12h3z"/></svg>
+    <h1>Figure 13.9:<br>How to calculate allele frequency</h1>
+    <div class="progress" id="progress" aria-hidden="true"></div>
+  </header>
+  <main id="main" aria-live="polite"></main>
+  <footer>
+    <button id="back"><svg viewBox="0 0 14 26"><path d="M12 2 2 13l10 11"/></svg>Back</button>
+    <span class="pg" id="pg"></span>
+    <button id="next">Next<svg viewBox="0 0 14 26"><path d="M2 2l10 11L2 24"/></svg></button>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   EDITABLE CONTENT: change text, genotypes and quiz items here
+   ============================================================ */
+const CONTENT = {
+  genotypes: ['AA','Aa','AA','Aa','aa','AA','AA','Aa','AA','Aa'],
+  intro: [
+    'Every individual in a population has a genotype that consists of alleles, or versions of the same gene, that they carry for a specific gene. In this figure, the alleles are represented as single letters\u2014capital <i><b>A</b></i> is one allele and lowercase <i><b>a</b></i> is a different allele of the same gene.',
+    'A population of species has a kind of genotype as well. The \u201cgenotype\u201d\u2014more accurately called a gene pool\u2014is described by the proportion of various alleles found in the population, or the allele frequency.',
+    'Because everyone in this small population of 10 people carries two copies of the gene, the total number of copies in the population is 20. Fourteen of the copies are the <i><b>A</b></i> allele, and six are the <i><b>a</b></i> allele. So, by dividing each of those numbers by 20, we can determine that the allele frequency is 70% <i><b>A</b></i> and 30% <i><b>a</b></i>.'
+  ],
+  introPrompt: 'Select the image to reveal a pie chart showing the allele frequency in this population.',
+  sim: [
+    'In the absence of processes that cause evolutionary change, such as natural selection or genetic drift, the allele frequency of the next generation of people produced by this population will not change.',
+    'However, if evolutionary processes that affect the contribution of individuals to the next generation do occur, the allele frequency can, and does, change over time. When certain individuals have more offspring than others, their alleles become more common. Alternatively, if certain individuals, for whatever reason, do not reproduce, their alleles may become less common in the next generation.',
+    'In this simulation, select the boxes below individuals in the population to remove them from the gene pool. Notice the effect that it has on allele frequency in the next generation, as shown in the pie chart. You can try new combinations by selecting the \u201creset\u201d button.'
+  ],
+  quiz: [
+    {
+      id:'q1',
+      prompt:'<b>Q1.</b> Carefully examine the <i><b>A</b></i> and <i><b>a</b></i> allele combinations for each person in this population. The removal of one individual with which of the following genotypes results in the greatest change to the population gene pool?',
+      options:[
+        {html:'<i><b>aa</b></i>', correct:true,  fb:'This genotype is the rarest in the population, and the one person who has it carries a large share of all the <i>a</i> alleles. Removing them changes the gene pool more than removing anyone else.'},
+        {html:'<i><b>Aa</b></i>', correct:false, fb:'While removing any individual from the gene pool has an effect, this genotype is relatively common, so losing this combination of alleles results in a small amount of change.'},
+        {html:'<i><b>AA</b></i>', correct:false, fb:'While removing any individual from the gene pool has an effect, this genotype is the most common, so losing this combination of alleles results in a small amount of change.'}
+      ]
+    },
+    {
+      id:'q2',
+      prompt:'<b>Q2.</b> Imagine the group in this image is split apart, such that the five individuals on the right formed their own population and the five on the left formed a separate population. How would the gene pools of these two populations compare?',
+      /* NOTE: replace these options with your book\u2019s actual answer choices */
+      options:[
+        {html:'The frequency of both <i><b>A</b></i> and <i><b>aa</b></i> alleles would immediately be lower in both populations because the populations are smaller.', correct:false, fb:'Population size alone does not lower allele frequencies. Frequencies depend on which alleles the individuals carry.'},
+        {html:'The two populations would have different allele frequencies from each other, and from the original population, because each small group carries a different sample of the original alleles.', correct:true, fb:'The five on the left carry 60% <i>A</i> and 40% <i>a</i>; the five on the right carry 80% <i>A</i> and 20% <i>a</i>. Neither matches the original 70% / 30%.'},
+        {html:'The two populations would have identical allele frequencies because they came from the same original gene pool.', correct:false, fb:'Both groups came from the same gene pool, but each holds only part of it, so their frequencies can differ.'}
+      ]
+    }
+  ]
+};
+
+/* ============================================================
+   Original illustration: simple people, genotype on the shirt
+   ============================================================ */
+const LOOKS = [
+  {skin:'#f1c9a5',hair:'#9a6b3d',top:'#bcd9e8',bottom:'#2f3b63'},
+  {skin:'#8a5a3b',hair:'#2a1a12',top:'#6a3d6b',bottom:'#4f78a8'},
+  {skin:'#d9a37a',hair:'#1f1410',top:'#c8403a',bottom:'#6d8bb0'},
+  {skin:'#5b3a29',hair:'#1a100b',top:'#f1f1f4',bottom:'#d8c3a0'},
+  {skin:'#f3d3b6',hair:'#6a4a2a',top:'#6fbf5a',bottom:'#8a7a3c'},
+  {skin:'#e7b995',hair:'#cfcfcf',top:'#5f7fb8',bottom:'#a89c82'},
+  {skin:'#7a4a32',hair:'#2b1810',top:'#e99bc0',bottom:'#f4f4f4'},
+  {skin:'#e2b48f',hair:'#1b1410',top:'#8fd18a',bottom:'#e6a6d0'},
+  {skin:'#f0c7a4',hair:'#c28a4a',top:'#9a93d6',bottom:'#c9e6c3'},
+  {skin:'#4c3023',hair:'#120a07',top:'#7b8085',bottom:'#b0a17e'}
+];
+function personSVG(i, g){
+  const L = LOOKS[i];
+  const dark = ['#6a3d6b','#c8403a','#5f7fb8','#7b8085','#9a93d6','#6fbf5a'].includes(L.top);
+  return `<svg viewBox="0 0 70 170" role="img" aria-label="Person ${i+1}, genotype ${g}">
+    <rect x="21" y="86" width="12" height="76" rx="5" fill="${L.bottom}"/>
+    <rect x="37" y="86" width="12" height="76" rx="5" fill="${L.bottom}"/>
+    <rect x="19" y="150" width="15" height="10" rx="4" fill="#4a3a30"/>
+    <rect x="36" y="150" width="15" height="10" rx="4" fill="#4a3a30"/>
+    <rect x="16" y="44" width="38" height="52" rx="12" fill="${L.top}"/>
+    <rect x="8" y="46" width="11" height="42" rx="5" fill="${L.top}"/>
+    <rect x="51" y="46" width="11" height="42" rx="5" fill="${L.top}"/>
+    <circle cx="13.5" cy="92" r="5" fill="${L.skin}"/><circle cx="56.5" cy="92" r="5" fill="${L.skin}"/>
+    <rect x="31" y="36" width="8" height="12" fill="${L.skin}"/>
+    <ellipse cx="35" cy="24" rx="14" ry="16" fill="${L.skin}"/>
+    <path d="M20 22c0-12 9-17 15-17s15 5 15 17c-4-6-10-8-15-8s-11 2-15 8z" fill="${L.hair}"/>
+    <text x="35" y="76" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-style="italic" font-weight="700" font-size="15" fill="${dark?'#fff':'#222'}">${g}</text>
+  </svg>`;
+}
+
+/* ============================================================
+   Pie chart with animated transitions
+   ============================================================ */
+function makePie(host){
+  host.innerHTML = `<svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle id="empty" cx="100" cy="100" r="90" fill="#e6e6e6" class="hidden"/>
+      <path id="sA" class="slice" fill="var(--A)" tabindex="0"/>
+      <path id="sa" class="slice" fill="var(--a)" tabindex="0"/>
+      <text id="tA" font-style="italic" font-weight="700" font-size="20" fill="#fff" text-anchor="middle"></text>
+      <text id="ta" font-style="italic" font-weight="700" font-size="20" fill="#fff" text-anchor="middle"></text>
+    </svg><div class="tip" aria-hidden="true"></div>`;
+  const $ = s => host.querySelector(s);
+  const sA=$('#sA'), sa=$('#sa'), tA=$('#tA'), ta=$('#ta'), empty=$('#empty'), tip=$('.tip');
+  let cur = null, raf = 0, target = null;
+  const pt=(deg,r=90)=>{const t=(deg-90)*Math.PI/180;return [100+r*Math.cos(t),100+r*Math.sin(t)]};
+  function arc(a0,a1){
+    if(a1-a0<=0.01) return '';
+    if(a1-a0>=359.99) return `M100 10A90 90 0 1 1 99.99 10Z`;
+    const [x0,y0]=pt(a0),[x1,y1]=pt(a1);
+    return `M100 100L${x0} ${y0}A90 90 0 ${a1-a0>180?1:0} 1 ${x1} ${y1}Z`;
+  }
+  function paint(fA){
+    const d=fA*360;
+    sA.setAttribute('d',arc(0,d)); sa.setAttribute('d',arc(d,360));
+    const mid=(a,b)=>pt((a+b)/2,56);
+    if(fA>0.06){const [x,y]=mid(0,d);tA.setAttribute('x',x);tA.setAttribute('y',y+7);tA.textContent='A'}else tA.textContent='';
+    if(fA<0.94){const [x,y]=mid(d,360);ta.setAttribute('x',x);ta.setAttribute('y',y+7);ta.textContent='a'}else ta.textContent='';
+  }
+  function show(el,name,p){
+    const on=()=>{tip.textContent=`${name}: ${p}%`;[sA,sa].forEach(s=>s.style.opacity=s===el?1:.55)};
+    const off=()=>{tip.textContent='';[sA,sa].forEach(s=>s.style.opacity=1)};
+    el.onmouseenter=on; el.onmouseleave=off; el.onfocus=on; el.onblur=off;
+  }
+  return {
+    set(fA, n){
+      cancelAnimationFrame(raf);
+      if(n===0){empty.classList.remove('hidden');sA.setAttribute('d','');sa.setAttribute('d','');tA.textContent='';ta.textContent='';tip.textContent='No individuals remain';cur=null;return}
+      empty.classList.add('hidden'); tip.textContent='';
+      const pA=(fA*100).toFixed(1), pa=((1-fA)*100).toFixed(1);
+      show(sA,'A',pA); show(sa,'a',pa);
+      const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+      if(cur===null||reduce){cur=fA;paint(fA);return}
+      const from=cur, t0=performance.now();
+      (function step(t){
+        const k=Math.min(1,(t-t0)/450), e=1-Math.pow(1-k,3);
+        cur=from+(fA-from)*e; paint(cur);
+        if(k<1) raf=requestAnimationFrame(step);
+      })(t0);
+    }
+  };
+}
+
+/* ============================================================
+   State and helpers
+   ============================================================ */
+const G = CONTENT.genotypes;
+const state = {page:0, revealed:false, removed:new Set(), quiz:{}};
+function freq(removed){
+  let A=0,a=0,n=0;
+  G.forEach((g,i)=>{ if(removed.has(i)) return; n++; for(const c of g){ c==='A'?A++:a++ } });
+  return {A,a,n,fA:(A+a)?A/(A+a):0};
+}
+const pct=x=>(x*100).toFixed(1).replace(/\.0$/,'');
+const peopleHTML = (withBoxes) => G.map((g,i)=>`
+  <div class="person${state.removed.has(i)?' out':''}" data-i="${i}">
+    ${personSVG(i,g)}
+    ${withBoxes?`<label><input type="checkbox" data-i="${i}" ${state.removed.has(i)?'checked':''}><span class="sr" style="position:absolute;left:-9999px">Remove person ${i+1}, genotype ${g}</span></label>`:''}
+  </div>`).join('');
+const $main = document.getElementById('main');
+const TOTAL = 2 + CONTENT.quiz.length;
+
+/* ============================================================
+   Pages
+   ============================================================ */
+function pageIntro(){
+  $main.innerHTML = CONTENT.intro.map(t=>`<p>${t}</p>`).join('') +
+    `<p class="note">${CONTENT.introPrompt}</p>
+     <div class="stage">
+       <button class="reveal" id="reveal" aria-label="Reveal pie chart of allele frequency" aria-pressed="${state.revealed}">
+         <div class="people">${peopleHTML(false)}</div>
+       </button>
+       <div class="pie-wrap ${state.revealed?'':'hidden'}" id="pieHost"></div>
+     </div>
+     <div class="readout ${state.revealed?'':'hidden'}" id="readout" style="text-align:center">Allele frequency: <b>70% <i>A</i></b> and <b>30% <i>a</i></b></div>`;
+  const host=document.getElementById('pieHost'), pie=makePie(host);
+  const f=freq(new Set());
+  if(state.revealed) pie.set(f.fA, f.n);
+  document.getElementById('reveal').onclick=()=>{
+    state.revealed=!state.revealed;
+    host.classList.toggle('hidden',!state.revealed);
+    document.getElementById('readout').classList.toggle('hidden',!state.revealed);
+    document.getElementById('reveal').setAttribute('aria-pressed',state.revealed);
+    if(state.revealed) pie.set(f.fA,f.n);
+  };
+}
+
+function pageSim(){
+  $main.innerHTML = CONTENT.sim.map(t=>`<p>${t}</p>`).join('') +
+    `<div class="stage">
+       <div class="people" id="people">${peopleHTML(true)}</div>
+       <div><div class="pie-wrap" id="pieHost"></div>
+       <div class="readout" id="readout" role="status" aria-live="polite" style="text-align:center"></div>
+       <button class="reset" id="reset">Reset</button></div>
+     </div>`;
+  const pie=makePie(document.getElementById('pieHost'));
+  const ro=document.getElementById('readout');
+  function update(){
+    const f=freq(state.removed);
+    pie.set(f.fA,f.n);
+    ro.innerHTML = f.n? `Next generation: <b>${pct(f.fA)}% <i>A</i></b>, <b>${pct(1-f.fA)}% <i>a</i></b> (${f.n} of ${G.length} individuals remain)` : 'All individuals have been removed.';
+  }
+  update();
+  document.getElementById('people').addEventListener('change',e=>{
+    const i=+e.target.dataset.i;
+    e.target.checked?state.removed.add(i):state.removed.delete(i);
+    e.target.closest('.person').classList.toggle('out',e.target.checked);
+    update();
+  });
+  document.getElementById('reset').onclick=()=>{
+    state.removed.clear();
+    document.querySelectorAll('#people input').forEach(c=>c.checked=false);
+    document.querySelectorAll('#people .person').forEach(p=>p.classList.remove('out'));
+    update();
+  };
+}
+
+function pageQuiz(qi){
+  const q=CONTENT.quiz[qi], st=state.quiz[q.id]||(state.quiz[q.id]={choice:null});
+  const answered = st.choice!==null;
+  const opt = q.options[st.choice];
+  $main.innerHTML = `<h2 class="cyu">Check Your Understanding</h2>
+    <div class="stage" style="margin:8px 0"><div class="people">${peopleHTML(false)}</div></div>
+    <p>${q.prompt}</p>
+    <div class="opts ${answered?'locked':''}" role="radiogroup" aria-label="Answer choices">
+      ${q.options.map((o,i)=>`<label class="opt ${answered&&i===st.choice?(o.correct?'right':'wrong'):''}">
+         <input type="radio" name="${q.id}" value="${i}" ${answered?'disabled':''} ${st.choice===i?'checked':''}><span>${o.html}</span></label>`).join('')}
+    </div>
+    ${answered?`<button class="retry" id="retry">${opt.correct?'Try again':'Retry'}</button>
+      <div class="feedback" role="status"><b class="${opt.correct?'good':'bad'}">${opt.correct?'Correct.':'Incorrect.'}</b> ${opt.fb}</div>`:''}`;
+  $main.querySelectorAll('input[name]').forEach(r=>r.onchange=()=>{st.choice=+r.value;render()});
+  const rt=document.getElementById('retry'); if(rt) rt.onclick=()=>{st.choice=null;render()};
+}
+
+/* ============================================================
+   Shell: progress, nav
+   ============================================================ */
+const $back=document.getElementById('back'), $next=document.getElementById('next');
+function canAdvance(){
+  if(state.page>=TOTAL-1) return false;
+  if(state.page>=2){const q=CONTENT.quiz[state.page-2], c=state.quiz[q.id]; return !!(c&&c.choice!==null&&q.options[c.choice].correct)}
+  return true;
+}
+function render(){
+  document.getElementById('progress').innerHTML=Array.from({length:TOTAL},(_,i)=>`<span class="${i<=state.page?'on':''}"></span>`).join('');
+  document.getElementById('pg').textContent=`Page ${state.page+1} of ${TOTAL}`;
+  [pageIntro,pageSim,...CONTENT.quiz.map((_,i)=>()=>pageQuiz(i))][state.page]();
+  $back.disabled = state.page===0;
+  $next.disabled = !canAdvance();
+}
+$back.onclick=()=>{ if(state.page>0){state.page--;render()} };
+$next.onclick=()=>{ if(canAdvance()){state.page++;render();window.scrollTo(0,0)} };
+render();
+</script>
+</body>
+</html>
+
+</body></html>
