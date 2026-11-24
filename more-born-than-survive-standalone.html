@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>[hidden]{display:none!important} body{margin:0}</style>
+<title>More Born Than Survive</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: compact single frame. Title + step pills on top, one panel, back/next below. Built to fit a short iframe. */
+:root {
+  --bg: #F3F6F5; --surface: #FFFFFF; --ink: #12211F; --muted: #55655F; --line: #D5DEDA;
+  --accent: #0F6B5F; --accent-ink: #FFFFFF; --soft: #E3F0ED;
+  --female: #C2457D; --male: #7C8A86; --good: #1B7F4B; --bad: #B3382C;
+  --c1: #0F6B5F; --c2: #C2457D; --c3: #B27300; --c4: #3F51C8; --c5: #6B4E9B;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1614; --surface: #16211E; --ink: #E6EFEC; --muted: #9DB0AA; --line: #2B3B37;
+    --accent: #4CC2AE; --accent-ink: #06201B; --soft: #1B2E2A; --female: #E877A8; --male: #8C9C97;
+    --good: #55C98A; --bad: #F0786B;
+    --c1: #4CC2AE; --c2: #E877A8; --c3: #E3A92B; --c4: #8E9BFF; --c5: #B79CE6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1614; --surface: #16211E; --ink: #E6EFEC; --muted: #9DB0AA; --line: #2B3B37;
+  --accent: #4CC2AE; --accent-ink: #06201B; --soft: #1B2E2A; --female: #E877A8; --male: #8C9C97;
+  --good: #55C98A; --bad: #F0786B;
+  --c1: #4CC2AE; --c2: #E877A8; --c3: #E3A92B; --c4: #8E9BFF; --c5: #B79CE6;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.45 var(--font-body);
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 900px; margin: 0 auto; display: grid; gap: 8px; }
+h1, h2 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; }
+h1 { font-size: 1.25rem; }
+h2 { font-size: 1.15rem; }
+p { margin: 0; max-width: 78ch; }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; }
+.top h1 small { font-family: var(--font-body); font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-right: 8px; }
+.stepper { display: flex; gap: 6px; flex-wrap: wrap; }
+.step-tab { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 12px; font-size: .84rem; font-weight: 600; cursor: pointer; color: var(--muted); }
+.step-tab[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.step-tab.done::after { content: " \2713"; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.btn { border: 1.5px solid var(--accent); background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 5px 16px; font-weight: 600; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+
+/* step 1 */
+.gen-ctl { background: var(--soft); border-radius: 10px; padding: 8px 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.gen-ctl label { font-weight: 600; }
+input[type="range"] { flex: 1 1 140px; min-width: 0; accent-color: var(--accent); }
+.big { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; line-height: 1; }
+.shelf { display: grid; gap: 6px; }
+.slots { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; border-bottom: 5px solid var(--accent); padding-bottom: 6px; }
+.slot { height: 34px; border: 2px dashed var(--line); border-radius: 8px; display: grid; place-items: center; }
+.slot .dot { width: 20px; height: 20px; }
+.shelf-label { font-size: .75rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.overflow { display: flex; flex-wrap: wrap; gap: 3px; min-height: 36px; align-content: flex-start; }
+.dot { display: block; border-radius: 50%; width: 11px; height: 11px; background: var(--female); }
+.dot.m { background: var(--male); }
+.legend { display: flex; gap: 14px; font-size: .82rem; color: var(--muted); }
+.legend i { display: inline-block; vertical-align: -1px; margin-right: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--female); }
+.legend i.m { background: var(--male); }
+
+/* step 2 */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.controls label, .controls .lbl { font-weight: 600; font-size: .9rem; }
+select { border: 1.5px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 8px; }
+.pills { display: inline-flex; gap: 6px; }
+.pill { position: relative; }
+.pill input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.pill span { display: block; border: 1.5px solid var(--line); border-radius: 999px; padding: 3px 12px; font-weight: 600; font-size: .9rem; }
+.pill input:checked + span { background: var(--soft); border-color: var(--accent); color: var(--accent); }
+.pill input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sim { display: grid; grid-template-columns: minmax(0, 500px) 230px; gap: 12px; align-items: start; justify-content: start; }
+.chart-box { border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+.chart-box svg { display: block; width: 100%; height: auto; }
+.chart-box text { fill: var(--muted); font: 11px var(--font-body); }
+.chart-box .grid { stroke: var(--line); stroke-width: 1; }
+.chart-box .earth { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart-box .earth-label { fill: var(--ink); font-weight: 600; }
+.chart-box .axis-title { fill: var(--ink); font-weight: 500; }
+.run-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; animation: draw .7s ease-out; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.badge-letter { fill: #fff !important; font-weight: 700; font-size: 10px; text-anchor: middle; }
+.results { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.results li { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 2px 8px; font-size: .82rem; line-height: 1.2; }
+.results .tag { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .7rem; }
+.results .yrs { font-family: var(--font-display); font-weight: 700; font-size: 1rem; text-align: right; white-space: nowrap; }
+.results .yrs small { font-family: var(--font-body); font-weight: 500; font-size: .7rem; color: var(--muted); }
+.results .empty { display: block; color: var(--muted); border-style: dashed; }
+.note { font-size: .82rem; color: var(--muted); min-height: 1.2em; margin-top: 4px; }
+@media (max-width: 640px) { .sim { grid-template-columns: 1fr; } }
+
+/* quiz */
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.q-text { font-weight: 600; font-size: 1.02rem; max-width: 70ch; }
+.q-opts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.q-opts.two { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.choice { position: relative; }
+.choice input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.choice label { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--surface); height: 100%; }
+.choice label::before { content: ""; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--muted); flex: none; }
+.choice input:checked + label { border-color: var(--accent); background: var(--soft); }
+.choice input:checked + label::before { border-color: var(--accent); background: radial-gradient(var(--accent) 0 45%, transparent 50%); }
+.choice input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: 2px; }
+.choice.right label { border-color: var(--good); background: transparent; }
+.choice.wrong label { border-color: var(--bad); background: transparent; }
+.feedback { border-left: 4px solid var(--line); padding: 6px 12px; border-radius: 4px; background: var(--soft); font-size: .92rem; min-height: 48px; }
+.feedback[data-ok="true"] { border-color: var(--good); }
+.feedback[data-ok="false"] { border-color: var(--bad); }
+.feedback strong { font-family: var(--font-display); margin-right: 4px; }
+.linklike { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font-size: inherit; }
+
+.nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.nav .count { color: var(--muted); font-size: .85rem; }
+sub, sup { line-height: 0; }
+@media (prefers-reduced-motion: reduce) { .run-line { animation: none; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1><small>Figure 12.8</small>More born than survive</h1>
+    <nav class="stepper" aria-label="Steps" id="stepper"></nav>
+  </div>
+
+  <!-- STEP 1 -->
+  <section class="panel" id="step-0" aria-labelledby="h-0">
+    <h2 id="h-0">Even slow breeders outrun their resources</h2>
+    <p>Darwin saw that every species can make more young than its environment can feed. His example, the African elephant, is among the slowest breeders: about six calves in 90 years, half of them female. Each pair leaves three pairs, so numbers triple each generation while the shelf stays the same size.</p>
+    <div class="gen-ctl">
+      <label for="gen">Generation</label>
+      <input type="range" id="gen" min="0" max="4" step="1" value="0">
+      <button class="btn" id="gen-next" type="button">Next</button>
+      <button class="btn ghost" id="gen-reset" type="button">Reset</button>
+      <span aria-live="polite"><span class="big num" id="gen-count">2</span> <span class="muted" id="gen-over"></span></span>
+    </div>
+    <div class="shelf">
+      <div class="shelf-label"><span>Shelf = available resources (room for 6)</span><span class="legend"><span><i></i>Female</span><span><i class="m"></i>Male</span></span></div>
+      <div class="slots" id="slots"></div>
+      <div class="overflow" id="overflow"></div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="panel" id="step-1" aria-labelledby="h-1" hidden>
+    <h2 id="h-1">How long until a population outweighs Earth?</h2>
+    <p>Start with one pair. Pick an organism and its maximum growth rate, <i>r</i><sub>max</sub>, then Run. Each line ends when the population weighs as much as Earth (<span class="num">6 × 10<sup>24</sup> kg</span>). Compare up to five.</p>
+    <div class="controls">
+      <span><label for="org-select">Organism</label> <select id="org-select"></select></span>
+      <span class="row" role="radiogroup" aria-label="Maximum growth rate per year"><span class="lbl"><i>r</i><sub>max</sub> per year</span><span class="pills" id="rates"></span></span>
+      <span class="row"><button class="btn" id="run" type="button">Run</button><button class="btn ghost" id="reset" type="button">Reset</button></span>
+    </div>
+    <div class="sim">
+      <div class="chart-box"><svg id="chart" viewBox="0 0 500 235" role="img" aria-label="Population weight over time for each run, log scale, with Earth's weight marked"></svg></div>
+      <div><ul class="results" id="results"></ul><div class="note" id="run-note" aria-live="polite"></div></div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="panel" id="step-2" aria-labelledby="h-2" hidden>
+    <h2 id="h-2">Question 1</h2>
+    <p class="q-text">Which factor is more important for determining how quickly a population reaches the weight of Earth?</p>
+    <fieldset><legend class="muted" style="font-size:.85rem;padding:0">Choose one answer.</legend><div class="q-opts two" id="q1-opts"></div></fieldset>
+    <div class="row"><button class="btn" id="q1-submit" type="button" disabled>Submit</button></div>
+    <div id="q1-fb" aria-live="polite"></div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="panel" id="step-3" aria-labelledby="h-3" hidden>
+    <h2 id="h-3">Question 2</h2>
+    <p class="q-text">Which <i>r</i><sub>max</sub> for a population would take the fewest years before the population weighs as much as Earth?</p>
+    <fieldset><legend class="muted" style="font-size:.85rem;padding:0">Choose one answer.</legend><div class="q-opts" id="q2-opts"></div></fieldset>
+    <div class="row"><button class="btn" id="q2-submit" type="button" disabled>Submit</button></div>
+    <div id="q2-fb" aria-live="polite"></div>
+  </section>
+
+  <div class="nav">
+    <button class="btn ghost" id="back" type="button">Back</button>
+    <span class="count num" id="count"></span>
+    <button class="btn" id="next" type="button">Next</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var EARTH = 6e24;
+  var STEPS = ["Idea", "Simulate", "Q1", "Q2"];
+  var ORGS = [
+    { id: "bact",  name: "Bacterium",        kg: 1e-15,  label: "1 picogram" },
+    { id: "fly",   name: "Housefly",         kg: 1.2e-5, label: "12 mg" },
+    { id: "mouse", name: "House mouse",      kg: 0.02,   label: "20 g" },
+    { id: "human", name: "Human",            kg: 62,     label: "62 kg" },
+    { id: "ele",   name: "African elephant", kg: 4000,   label: "4,000 kg" },
+    { id: "whale", name: "Blue whale",       kg: 150000, label: "150,000 kg" }
+  ];
+  var RATES = [0.5, 2, 17, 76];
+  var COLORS = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)", "var(--c5)"];
+  var LETTERS = ["A", "B", "C", "D", "E"];
+
+  function $(id) { return document.getElementById(id); }
+  function timeToEarth(kg, r) { return Math.log(EARTH / (2 * kg)) / r; }
+  function fmtYears(t) { return t < 10 ? t.toFixed(1) : Math.round(t).toLocaleString("en-US"); }
+  var SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  function pow10(n) { if (n === 0) return "1"; return "10" + String(n).split("").map(function (c) { return SUP[c]; }).join(""); }
+  function orgById(id) { return ORGS.filter(function (o) { return o.id === id; })[0]; }
+
+  /* ---------- stepper ---------- */
+  var cur = 0, done = {};
+  function renderStepper() {
+    $("stepper").innerHTML = STEPS.map(function (s, i) {
+      return '<button type="button" class="step-tab' + (done[i] ? " done" : "") + '" data-i="' + i + '"' +
+        (i === cur ? ' aria-current="step"' : "") + ">" + (i + 1) + " · " + s + "</button>";
+    }).join("");
+  }
+  function show(i) {
+    cur = Math.max(0, Math.min(3, i));
+    for (var k = 0; k < 4; k++) $("step-" + k).hidden = k !== cur;
+    if (cur < 2) done[cur] = true;
+    renderStepper();
+    $("back").disabled = cur === 0;
+    $("next").hidden = cur === 3;
+    $("count").textContent = "Step " + (cur + 1) + " of 4";
+    if (cur === 1) renderChart();
+  }
+  $("stepper").addEventListener("click", function (e) { var b = e.target.closest(".step-tab"); if (b) show(+b.dataset.i); });
+  $("back").addEventListener("click", function () { show(cur - 1); });
+  $("next").addEventListener("click", function () { show(cur + 1); });
+
+  /* ---------- step 1 ---------- */
+  var CAP = 6;
+  function renderGen() {
+    var g = +$("gen").value, n = 2 * Math.pow(3, g);
+    $("gen-count").textContent = n.toLocaleString("en-US");
+    var html = "";
+    for (var i = 0; i < CAP; i++) html += '<div class="slot">' + (i < n ? '<span class="dot' + (i % 2 ? " m" : "") + '"></span>' : "") + "</div>";
+    $("slots").innerHTML = html;
+    var extra = Math.max(0, n - CAP), o = "";
+    for (var j = 0; j < extra; j++) o += '<span class="dot' + ((j + CAP) % 2 ? " m" : "") + '"></span>';
+    $("overflow").innerHTML = o;
+    $("gen-over").textContent = extra ? "elephants · " + extra.toLocaleString("en-US") + " have no room" : (n === CAP ? "elephants · shelf exactly full" : "elephants · plenty of room");
+    $("gen-next").disabled = g >= 4;
+  }
+  $("gen").addEventListener("input", renderGen);
+  $("gen-next").addEventListener("click", function () { $("gen").value = Math.min(4, +$("gen").value + 1); renderGen(); });
+  $("gen-reset").addEventListener("click", function () { $("gen").value = 0; renderGen(); });
+
+  /* ---------- step 2 ---------- */
+  var selOrg = "ele", selRate = 2, runs = [{ org: "ele", r: 0.5 }];
+  $("org-select").innerHTML = ORGS.map(function (o) {
+    return '<option value="' + o.id + '"' + (o.id === selOrg ? " selected" : "") + ">" + o.name + " (" + o.label + ")</option>";
+  }).join("");
+  $("rates").innerHTML = RATES.map(function (r) {
+    var id = "rate-" + String(r).replace(".", "_");
+    return '<span class="pill"><input type="radio" name="rate" id="' + id + '" value="' + r + '"' + (r === selRate ? " checked" : "") + '><span class="num">' + r + "</span></span>";
+  }).join("");
+  $("org-select").addEventListener("change", function (e) { selOrg = e.target.value; });
+  $("rates").addEventListener("change", function (e) { selRate = +e.target.value; });
+
+  $("run").addEventListener("click", function () {
+    var note = $("run-note");
+    if (runs.length >= 5) { note.textContent = "Five runs plotted. Reset to try new ones."; return; }
+    if (runs.some(function (r) { return r.org === selOrg && r.r === selRate; })) { note.textContent = "Already plotted. Try a different combination."; return; }
+    runs.push({ org: selOrg, r: selRate });
+    note.textContent = "";
+    renderChart();
+  });
+  $("reset").addEventListener("click", function () { runs = []; $("run-note").textContent = ""; renderChart(); });
+
+  function renderChart() {
+    var svg = $("chart"), W = 500, H = 235, L = 56, R = 18, T = 12, B = 36;
+    var pw = W - L - R, ph = H - T - B, yMin = -16, yMax = 26, earthY = Math.log10(EARTH);
+    var maxT = runs.reduce(function (m, r) { return Math.max(m, timeToEarth(orgById(r.org).kg, r.r)); }, 0);
+    var steps = [1, 2, 5, 10, 20, 25, 50, 100], step = 100;
+    for (var s = 0; s < steps.length; s++) { if ((maxT || 10) / steps[s] <= 6) { step = steps[s]; break; } }
+    var xMax = Math.max(step * 2, Math.ceil((maxT || 10) / step) * step);
+    function X(t) { return L + (t / xMax) * pw; }
+    function Y(v) { return T + ((yMax - v) / (yMax - yMin)) * ph; }
+    var out = "";
+    for (var v = -10; v <= 20; v += 10) {
+      out += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/>';
+      out += '<text x="' + (L - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + pow10(v) + "</text>";
+    }
+    for (var t = 0; t <= xMax; t += step) {
+      out += '<line class="grid" x1="' + X(t) + '" x2="' + X(t) + '" y1="' + T + '" y2="' + (T + ph) + '"/>';
+      out += '<text x="' + X(t) + '" y="' + (T + ph + 14) + '" text-anchor="middle">' + t + "</text>";
+    }
+    out += '<text class="axis-title" x="' + (L + pw / 2) + '" y="' + (H - 4) + '" text-anchor="middle">Years</text>';
+    out += '<text class="axis-title" transform="translate(11 ' + (T + ph / 2) + ') rotate(-90)" text-anchor="middle">Population weight (kg, log scale)</text>';
+    out += '<line class="earth" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(earthY) + '" y2="' + Y(earthY) + '"/>';
+    out += '<text class="earth-label" x="' + (L + 6) + '" y="' + (Y(earthY) - 5) + '">Earth: 6 × 10²⁴ kg</text>';
+    runs.forEach(function (r, i) {
+      var o = orgById(r.org), tt = timeToEarth(o.kg, r.r);
+      var x0 = X(0), y0 = Y(Math.log10(2 * o.kg)), x1 = X(tt), y1 = Y(earthY);
+      out += '<path class="run-line" pathLength="1" d="M' + x0 + " " + y0 + " L" + x1 + " " + y1 + '" stroke="' + COLORS[i] + '"/>';
+      out += '<circle cx="' + x1 + '" cy="' + y1 + '" r="9" fill="' + COLORS[i] + '"/><text class="badge-letter" x="' + x1 + '" y="' + (y1 + 3.5) + '">' + LETTERS[i] + "</text>";
+    });
+    svg.innerHTML = out;
+    $("results").innerHTML = runs.length === 0
+      ? '<li class="empty">No runs yet. Choose an organism and rate, then press Run.</li>'
+      : runs.map(function (r, i) {
+          var o = orgById(r.org), tt = timeToEarth(o.kg, r.r);
+          return '<li><span class="tag" style="background:' + COLORS[i] + '">' + LETTERS[i] + "</span><span><b>" + o.name + '</b><br><span class="muted"><i>r</i><sub>max</sub> ' + r.r + '/yr</span></span><span class="yrs num">' + fmtYears(tt) + " <small>yr</small></span></li>";
+        }).join("");
+  }
+
+  /* ---------- quiz ---------- */
+  function quiz(cfg) {
+    var box = $(cfg.id + "-opts"), submit = $(cfg.id + "-submit"), fb = $(cfg.id + "-fb"), picked = null, locked = false;
+    fb.innerHTML = '<div class="feedback" data-ok="">Pick an answer, then press Submit.</div>';
+    box.innerHTML = cfg.options.map(function (o, i) {
+      return '<div class="choice" data-v="' + o.v + '"><input type="radio" name="' + cfg.id + '" id="' + cfg.id + "-" + i + '" value="' + o.v + '"><label for="' + cfg.id + "-" + i + '">' + o.text + "</label></div>";
+    }).join("");
+    box.addEventListener("change", function (e) {
+      if (locked) return;
+      picked = e.target.value; submit.disabled = false;
+      [].forEach.call(box.children, function (c) { c.classList.remove("wrong"); });
+    });
+    submit.addEventListener("click", function () {
+      if (picked === null || locked) return;
+      var node = box.querySelector('[data-v="' + picked + '"]');
+      if (picked === cfg.correct) {
+        locked = true; node.classList.add("right"); submit.disabled = true;
+        [].forEach.call(box.querySelectorAll("input"), function (i) { i.disabled = true; });
+        done[cfg.step] = true; renderStepper();
+        fb.innerHTML = '<div class="feedback" data-ok="true"><strong>Correct.</strong>' + cfg.right + "</div>";
+      } else {
+        node.classList.add("wrong");
+        fb.innerHTML = '<div class="feedback" data-ok="false"><strong>Not quite.</strong>' + cfg.wrong + "</div>";
+      }
+    });
+  }
+
+  quiz({
+    id: "q1", step: 2, correct: "rate",
+    options: [
+      { v: "rate", text: "The maximum growth rate (<i>r</i><sub>max</sub>)" },
+      { v: "weight", text: "The weight of the organism" }
+    ],
+    right: "Weight changes the time by only about 2× across a bacterium to a blue whale, while growth rate changes it by up to 152×. Faster growers win whatever their size.",
+    wrong: 'Compare runs that differ only in weight, then runs that differ only in rate. Which moves the years more? <button type="button" class="linklike" data-goto="1">Back to the simulation</button>'
+  });
+  quiz({
+    id: "q2", step: 3, correct: "76",
+    options: [
+      { v: "17", text: "17 per year" }, { v: "0.5", text: "0.5 per year" },
+      { v: "2", text: "2 per year" }, { v: "76", text: "76 per year" }
+    ],
+    right: "A higher <i>r</i><sub>max</sub> means faster growth, so it gets to Earth’s weight first. Populations can outgrow their resources, which is why more are born than can survive.",
+    wrong: 'Think about what a larger growth rate does to how fast a population multiplies. <button type="button" class="linklike" data-goto="1">Back to the simulation</button>'
+  });
+  document.addEventListener("click", function (e) { var g = e.target.closest("[data-goto]"); if (g) show(+g.dataset.goto); });
+
+  renderGen();
+  renderChart();
+  show(0);
+})();
+</script>
+
+</body>
+</html>
